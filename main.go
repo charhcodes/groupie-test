@@ -67,7 +67,7 @@ var (
 func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 	w.WriteHeader(status) // sends an HTTP response with the status code, does not write
 	if status == http.StatusNotFound {
-		_, err := template.ParseFiles("errorPage.html")
+		_, err := template.ParseFiles("error.html")
 		if err != nil {
 			errorHandler(w, r, http.StatusInternalServerError)
 			return
@@ -76,7 +76,7 @@ func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 		os.Exit(0)
 	}
 	if status == http.StatusInternalServerError {
-		_, err := template.ParseFiles("errorPage.html")
+		_, err := template.ParseFiles("error.html")
 		if err != nil {
 			fmt.Fprint(w, "HTTP status 500: Internal Server Error")
 			return
@@ -85,7 +85,7 @@ func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 		os.Exit(0)
 	}
 	if status == http.StatusBadRequest {
-		_, err := template.ParseFiles("errorPage.html")
+		_, err := template.ParseFiles("error.html")
 		if err != nil {
 			fmt.Fprint(w, "HTTP status 500: Internal Server Error")
 			return
@@ -219,12 +219,18 @@ func collectData() []Data {
 // home page handler
 func homePage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
+		if r.URL.Path == "/artistInfo" {
+			fmt.Println("Working 1")
+			return
+		}
+		fmt.Println("Home page, error 1")
 		errorHandler(w, r, http.StatusNotFound)
 		return
 	}
 	data := ArtistData()
-	t, err := template.ParseFiles("template.html") // uses template.html to parse thru data
+	t, err := template.ParseFiles("index.html") // uses template.html to parse thru data
 	if err != nil {
+		fmt.Println("Home page, error 2")
 		errorHandler(w, r, http.StatusInternalServerError)
 		return
 	}
@@ -234,11 +240,13 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 // handles the artist Page when artist image is clicked by receiving "ArtistName" value
 func artistPage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/artistInfo" { // checks if URL ends with 'artistInfo'
+		fmt.Println("Error 1")
 		errorHandler(w, r, http.StatusNotFound)
 		return
 	}
 	value := r.FormValue("ArtistName") // value variable stores the artist name as a form value
 	if value == "" {                   // checks if value is empty
+		fmt.Println("Error 2")
 		errorHandler(w, r, http.StatusBadRequest)
 		return
 	}
@@ -252,6 +260,7 @@ func artistPage(w http.ResponseWriter, r *http.Request) {
 	}
 	t, err := template.ParseFiles("artistPage.html")
 	if err != nil {
+		fmt.Println("Error 3")
 		errorHandler(w, r, http.StatusInternalServerError)
 		return
 	}
@@ -259,31 +268,35 @@ func artistPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // displays location data as a JSON raw message on webpage.
-func returnAllLocations(w http.ResponseWriter, r *http.Request) {
-	//fmt.Println("Endpoint Hit: returnAllLocations")
-	json.NewEncoder(w).Encode(LocationData()) // creates a new encoder that writes to w, then encodes LocationData by converting it to JSON
-}
+// func returnAllLocations(w http.ResponseWriter, r *http.Request) {
+// 	//fmt.Println("Endpoint Hit: returnAllLocations")
+// 	json.NewEncoder(w).Encode(LocationData()) // creates a new encoder that writes to w, then encodes LocationData by converting it to JSON
+// }
 
 // displays dates data as a JSON raw message on webpage.
-func returnAllDates(w http.ResponseWriter, r *http.Request) {
-	//fmt.Println("Endpoint Hit: returnAllDates")
-	json.NewEncoder(w).Encode(DatesData())
-}
+// func returnAllDates(w http.ResponseWriter, r *http.Request) {
+// 	//fmt.Println("Endpoint Hit: returnAllDates")
+// 	json.NewEncoder(w).Encode(DatesData())
+// }
 
 // displays relation data as a JSON raw message on webpage.
-func returnAllRelation(w http.ResponseWriter, r *http.Request) {
-	//fmt.Println("Endpoint Hit: returnAllRelation")
-	json.NewEncoder(w).Encode(RelationData())
-}
+// func returnAllRelation(w http.ResponseWriter, r *http.Request) {
+// 	//fmt.Println("Endpoint Hit: returnAllRelation")
+// 	json.NewEncoder(w).Encode(RelationData())
+// }
 
 // collection of webpage handlers
-func main() {
+func Handler() {
 	fmt.Println("Fetching server at port 8080...")
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/artistInfo", artistPage)
-	http.HandleFunc("/locations", returnAllLocations)
-	http.HandleFunc("/dates", returnAllDates)
-	http.HandleFunc("/relation", returnAllRelation)
-	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
+	// http.HandleFunc("/locations", returnAllLocations)
+	// http.HandleFunc("/dates", returnAllDates)
+	// http.HandleFunc("/relations", returnAllRelation)
+	//http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 	http.ListenAndServe(":8080", nil)
+}
+
+func main() {
+	Handler()
 }
